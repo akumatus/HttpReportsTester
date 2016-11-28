@@ -1,0 +1,28 @@
+{
+    "name": "Reports Testing",
+    "description": "A testing framework which can automatically testing http reports.",
+    "version": "0.1",
+    "background": {
+      "scripts": [ "src/js/background.js" ]
+    },
+    "browser_action": {
+        "default_icon": "src/icons/scan.png"
+    },
+    "icons": {
+        "16" : "src/icons/scan.png",
+        "48" : "src/icons/scan.png",
+        "128": "src/icons/scan.png"
+    },
+    "permissions": [ "tabs","bidu", "cookies", "*://*/", "<all_urls>", "webRequestBlocking", "webRequest", "storage", "notifications" ],
+    "manifest_version": 2,
+    "externally_connectable": {
+        "ids": [
+            "*"
+            ],
+        "matches": [
+            "*://*/"
+            ],
+        "accepts_tls_channel_id": true
+    },
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}

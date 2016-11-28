@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mocha Tests</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/AdminLTE.min.css">
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
+    <link rel="stylesheet" href="./css/testing.css">
+</head>
+<body>
+<div id="app">
+    <section class="content">
+        <div class="box box-info">
+            <div class="box-header with-border">
+                <h3 class="box-title">Test Case</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+            <form class="form-horizontal">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Website Url:</label>
+                        <div class="col-sm-10">
+                            <input type="url" class="form-control" placeholder="Url" v-model="url">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Report Http Url:</label>
+                        <div class="col-sm-10">
+                            <input type="url" class="form-control" placeholder="Url" v-model="reportUrl">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Maps:</label>
+                        <div class="col-sm-10">
+                            <button class="btn btn-sm btn-info" @click.prevent="chooseMapFile">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                Upload
+                            </button>
+                            <input id="uploadMapFile" name="uploadUrl" type="file" style="display: none" @change="saveMap">
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-default">Cancel</button>
+                    <button type="submit" class="btn btn-info pull-right" @click.prevent="startTesting">Start Testing</button>
+                </div>
+                <!-- /.box-footer -->
+            </form>
+        </div>
+    </section>
+
+    <section class="content" v-show="showResult">
+        <div class="box box-info">
+            <div id="mocha"></div>
+        </div>
+    </section>
+</div>
+
+<script src="./js/vue.js"></script>
+<script src="../node_modules/mocha/mocha.js"></script>
+<script src="../node_modules/chai/chai.js"></script>
+<script src="./js/index.js"></script>
+
+</body>
+</html>
