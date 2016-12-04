@@ -5,3 +5,7 @@ body {
 #mocha-stats {
   position: absolute;
 }
+
+.box {
+  padding-bottom: 10px;
+}

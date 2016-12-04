@@ -4,6 +4,7 @@
 var map = [{
   event: 'init',
   dom: 'body',
+  order: false,
   reports: [
     {
       "1": "1",
@@ -129,6 +130,7 @@ var map = [{
 }, {
   event: 'scroll',
   dom: 'body',
+  order: true,
   reports: [
     {
       "1001": "2",
@@ -187,6 +189,7 @@ var map = [{
   ]
 },{
   event: 'click',
+  order: true,
   dom: '.websitesUl-li-link',
   reports: [{
     "62": "{{href}}",
@@ -202,6 +205,7 @@ var map = [{
 },{
   event: 'hover',
   dom: '.weatherWrapper',
+  order: true,
   reports: [{
     "1001": "2",
     "1353": "1",
