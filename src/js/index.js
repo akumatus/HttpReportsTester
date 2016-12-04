@@ -226,24 +226,60 @@ var app = new Vue({
     mochaDescribe: function (reports, code) {
       var _this = this;
       var len = code.reports.length * _this.dom[code.name].length;
-      var describeCode = `
-      describe('${code.name} ${_this.dom[code.name].selector}', function() {
-        it('should sending ${len} HTTP reports as expected', function() {
+
+      describe(code.name + '' + _this.dom[code.name].selector, function() {
+        it('should sending ' + len + ' HTTP reports as expected', function() {
           expect(reports).to.have.length(len);
         });
 
         if(reports.length === len){
           it('should sending the same content as expected', function() {
-            var i, findReport;
+            var i, j, findReport, key;
+            var domLength = _this.dom[code.name].length;
+            var reportsClone;
 
-            if(_this.dom[code.name].length > 1){ //multiple dom condition
+            if(domLength > 1){ //multiple dom condition
+              for(i = 0; i < domLength; i ++){
+                reportsClone = JSON.parse(JSON.stringify(code.reports));
+                for(j = 0; j < reportsClone.length; j++){
+                  for(key in reportsClone[j]){
+                    if(reportsClone[j].hasOwnProperty(key)){
+                      var match = reportsClone[j][key].match(/{{(\w+)}}/);
+                      if(match){
+                        reportsClone[j][key] = _this.dom[code.name][match[1]][i]; //replace {{href}} {{innerHTML}} and so on
+                      }
+                    }
+                  }
+                  
+                  findReport = (function(){
+                    var key, codeArray = [];
+                    for(key in reportsClone[j]){
+                      if(reportsClone[j].hasOwnProperty(key)){
+                        if(typeof reportsClone[j][key] === 'string'){
+                          codeArray.push('reports["' + key + '"] === "' + reportsClone[j][key] + '"');
+                        }
+                        else{
+                          codeArray.push('reports["' + key + '"] === ' + reportsClone[j][key]);
+                        }
+                      }
+                    }
+                    console.log(codeArray.join('&&'));
+                    return function (reports) {
+                      return eval(codeArray.join('&&'));
+                    };
+                  })();
 
+                  console.log(code.name);
+                  console.log(reports, JSON.stringify(reports.find(findReport)), '\n', JSON.stringify(reportsClone[j]));
+                  expect(reports.find(findReport)).to.not.equal(undefined);
+                }
+              }
             }
             else{
               if(code.order){ //same order as expected
                 for(i = 0; i < len; i ++){
-                  console.log(code.name);
-                  console.log(JSON.stringify(reports[i]), '\\n', JSON.stringify(code.reports[i]));
+                  //console.log(code.name);
+                  //console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(code.reports[i]));
                   expect(reports[i]).to.deep.equal(code.reports[i]);
                 }
               }
@@ -263,8 +299,8 @@ var app = new Vue({
                     }
                     return eval(codeArray.join('&&'));
                   };
-                  console.log(code.name);
-                  console.log(JSON.stringify(reports[i]), '\\n', JSON.stringify(code.reports[i]));
+                  //console.log(code.name);
+                  //console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(reports.find(findReport));
                   expect(reports.find(findReport)).to.not.equal(undefined);
                 }
               }
@@ -272,9 +308,6 @@ var app = new Vue({
           });
         }
       });
-      `;
-
-      eval(describeCode);
     },
 
     startTesting: function () {

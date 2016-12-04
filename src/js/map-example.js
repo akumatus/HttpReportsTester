@@ -189,7 +189,7 @@ var map = [{
   ]
 },{
   event: 'click',
-  order: true,
+  order: false,
   dom: '.websitesUl-li-link',
   reports: [{
     "62": "{{href}}",
