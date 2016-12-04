@@ -16,13 +16,15 @@
     "permissions": [ "tabs","bidu", "cookies", "*://*/", "<all_urls>", "webRequestBlocking", "webRequest", "storage", "notifications" ],
     "manifest_version": 2,
     "externally_connectable": {
-        "ids": [
-            "*"
-            ],
-        "matches": [
-            "*://*/"
-            ],
+        "ids": ["*"],
+        "matches": ["*://*/*"],
         "accepts_tls_channel_id": true
     },
-    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+    "content_scripts" : [
+        {
+            "matches" : ["*://*/*"],
+            "js" : ["src/js/inject.js"]
+        }
+    ]
 }

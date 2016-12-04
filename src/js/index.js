@@ -18,6 +18,7 @@ var app = new Vue({
     url: 'https://0.baidu.com/',
     reportUrl: 'http://dr.w.baidu.com/report*',
     map: [],
+    dom: {},
     code: [],
     tabId: null
   },
@@ -53,7 +54,17 @@ var app = new Vue({
     generateInsertCode: function () {
       var i, len = this.map.length;
       for(i = 0; i < len; i++){
+        this.dom[this.map[i].event] = {
+          selector: this.map[i].dom
+        };
         switch (this.map[i].event){
+          case 'init':
+            this.code.push({
+              name: this.map[i].event,
+              reports: this.map[i].reports,
+              code: ``
+            });
+            break;
           case 'scroll':
             this.code.push({
               name: this.map[i].event,
@@ -71,17 +82,37 @@ var app = new Vue({
               reports: this.map[i].reports,
               code: `
               var clickDoms = document.querySelectorAll('${this.map[i].dom}');
-              var event;
+              var clickEvent;
               for (var i = 0; i < clickDoms.length; i++){
-                event = new MouseEvent('click', {
+                clickEvent = new MouseEvent('click', {
                   'view': window,
                   'bubbles': true,
                   'cancelable': true
                 });
-                event.preventDefault();
-                clickDoms[i].dispatchEvent(event);
+                clickEvent.preventDefault();
+                clickDoms[i].dispatchEvent(clickEvent);
               }`
             });
+            break;
+          case 'hover':
+            this.code.push({
+              name: this.map[i].event,
+              reports: this.map[i].reports,
+              code: `
+              var hoverDoms = document.querySelectorAll('${this.map[i].dom}');
+              var hoverEvent;
+              for (var i = 0; i < hoverDoms.length; i++){
+                hoverEvent = new MouseEvent('mouseover', {
+                  'view': window,
+                  'bubbles': true,
+                  'cancelable': true
+                });
+                hoverEvent.preventDefault();
+                hoverDoms[i].dispatchEvent(hoverEvent);
+              }`
+            });
+            break;
+          default:
             break;
         }
       }
@@ -89,38 +120,58 @@ var app = new Vue({
 
     openWebsite: function () {
       var _this = this;
+
+      chrome.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+          if(request === 'ready' && _this.tabId){
+            chrome.tabs.sendMessage(_this.tabId, _this.dom, function (response) {
+              _this.dom = response; //get dom length, href, innerHTML and so on to help assertion
+            });
+          }
+        }
+      );
+
       chrome.tabs.create({
         url: this.url,
-        active: false
+        active: true
       }, function (tab){
-        var i, len = _this.code.length;
-        var promiseArray = [];
-        this.tabId = tab.id;
-        for(i = 0; i < len; i++){
-          promiseArray.push(_this.executeScript(_this.code[i]));
+        _this.tabId = tab.id;
+
+        function promiseLoop(index) {
+          var promise = _this.executeScript(_this.code[index]);
+          promise.then(function(value) {
+            console.log(JSON.stringify(value));
+            if(index + 1 < _this.code.length){
+              promiseLoop(index + 1);
+            }
+            else{
+              chrome.tabs.remove(_this.tabId, function () {
+                _this.tabId = null;
+              });
+            }
+          });
         }
-        Promise.all(promiseArray).then(function () {});
+
+        promiseLoop(0);
       });
     },
 
     executeScript: function (code) {
       return new Promise((resolve, reject) => {
-        this.webRequestListener(code, resolve);
+        this.webRequestListener(code, resolve, reject);
         chrome.tabs.executeScript(this.tabId, {code: code.code});
       });
     },
 
-    webRequestListener: function (code, resolve) {
+    webRequestListener: function (code, resolve, reject) {
       var _this = this;
-      var distNum = code.reports.length;
-      var receivedNum = 0;
       var reports = [];
-
-      chrome.webRequest.onBeforeRequest.addListener(function(details) {
+      var id;
+      var handle = function(details) {
         var reportRaw = details.url.split('?')[1].split('&');
         var report = {}, tempAry;
         var i, len = reportRaw.length;
-        
+
         for(i = 0; i < len; i++){
           tempAry = reportRaw[i].split('=');
           if(tempAry[0] !== '_'){ //filter timestamp
@@ -129,18 +180,21 @@ var app = new Vue({
         }
         reports.push(report);
 
-        receivedNum += 1;
-        if (receivedNum === distNum){
-          this.describe(reports, code); //mocha & chai assert
-          resolve(); //promise
-        }
-        
+        clearTimeout(id);
+        id = setTimeout(function () {
+          var distNum = code.reports.length * _this.dom[code.name].length;
+          var receivedNum = reports.length;
+          console.log(code.name, receivedNum, distNum);
+          
+          resolve(reports);
+          chrome.webRequest.onBeforeRequest.removeListener(handle);
+        }, 1000);
+
         return {cancel: true}; //block http report sending
-      }, {
-        urls: [this.reportUrl]
-      },
-      ['blocking']
-      );
+      };
+
+      chrome.webRequest.onBeforeRequest.addListener(handle, {urls: [_this.reportUrl]}, ['blocking']);
+
     },
 
     describe: function (reports, code) {
