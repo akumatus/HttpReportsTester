@@ -69,9 +69,11 @@ var app = new Vue({
         for(j = 0; j < this.map[i].reports.length; j++){
           for(k in this.map[i].reports[j]){
             if(this.map[i].reports[j].hasOwnProperty(k)){
-              var match = this.map[i].reports[j][k].match(/{{(\w+)}}/);
-              if(match){
-                this.dom[this.map[i].event][match[1]] = []; //href, innerHTML and so on
+              if(typeof this.map[i].reports[j][k] === 'string'){
+                var match = this.map[i].reports[j][k].match(/{{(\w+)}}/);
+                if(match){
+                  this.dom[this.map[i].event][match[1]] = []; //href, innerHTML and so on
+                }
               }
             }
           }
@@ -226,6 +228,26 @@ var app = new Vue({
     mochaDescribe: function (reports, code) {
       var _this = this;
       var len = code.reports.length * _this.dom[code.name].length;
+      
+      function findReportHandle (mapReport) {
+        var key, codeArray = [];
+        for(key in mapReport){
+          if(mapReport.hasOwnProperty(key)){
+            if(typeof mapReport[key].test === 'function'){
+              codeArray.push(`${mapReport[key]}.test(reports['${key}'])`); //regex test
+            }
+            else if(typeof mapReport[key] === 'string'){
+              codeArray.push(`reports['${key}'] === '${mapReport[key]}'`);
+            }
+            else {
+              codeArray.push(`reports['${key}'] === ${mapReport[key]}`);
+            }
+          }
+        }
+        return function (reports) {
+          return eval(codeArray.join('&&'));
+        }
+      }
 
       describe(code.name + '' + _this.dom[code.name].selector, function() {
         it('should sending ' + len + ' HTTP reports as expected', function() {
@@ -250,59 +272,31 @@ var app = new Vue({
                       }
                     }
                   }
-                  
-                  findReport = (function(){
-                    var key, codeArray = [];
-                    for(key in reportsClone[j]){
-                      if(reportsClone[j].hasOwnProperty(key)){
-                        if(typeof reportsClone[j][key] === 'string'){
-                          codeArray.push('reports["' + key + '"] === "' + reportsClone[j][key] + '"');
-                        }
-                        else{
-                          codeArray.push('reports["' + key + '"] === ' + reportsClone[j][key]);
-                        }
-                      }
-                    }
-                    return function (reports) {
-                      return eval(codeArray.join('&&'));
-                    };
-                  })();
-
-                  console.log(code.name);
-                  console.log(reports, JSON.stringify(reports.find(findReport)), '\n', JSON.stringify(reportsClone[j]));
+                  findReport = findReportHandle(reportsClone[j]);
                   expect(reports.find(findReport)).to.not.equal(undefined);
+                  
+                  console.log(code.name);
+                  console.log(JSON.stringify(reports.find(findReport)), '\n', JSON.stringify(reportsClone[j]));
                 }
               }
             }
             else{
               if(code.order){ //same order as expected
                 for(i = 0; i < len; i ++){
+                  findReport = findReportHandle(code.reports[i]);
+                  expect(findReport(reports[i])).to.equal(true);
+                  
                   console.log(code.name);
                   console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(code.reports[i]));
-                  expect(reports[i]).to.deep.equal(code.reports[i]);
                 }
               }
               else{ //do not need to have the same order
                 for(i = 0; i < len; i ++){
-                  findReport = (function(){
-                    var key, codeArray = [];
-                    for(key in code.reports[i]){
-                      if(code.reports[i].hasOwnProperty(key)){
-                        if(typeof code.reports[i][key] === 'string'){
-                          codeArray.push('reports["' + key + '"] === "' + code.reports[i][key] + '"');
-                        }
-                        else{
-                          codeArray.push('reports["' + key + '"] === ' + code.reports[i][key]);
-                        }
-                      }
-                    }
-                    return function (reports) {
-                      return eval(codeArray.join('&&'));
-                    }
-                  })();
+                  findReport = findReportHandle(code.reports[i]);
+                  expect(reports.find(findReport)).to.not.equal(undefined);
+                  
                   console.log(code.name);
                   console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(reports.find(findReport)));
-                  expect(reports.find(findReport)).to.not.equal(undefined);
                 }
               }
             }
@@ -310,7 +304,7 @@ var app = new Vue({
         }
       });
     },
-
+    
     startTesting: function () {
       this.openWebsite();
       this.showResult = true;
