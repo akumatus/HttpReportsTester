@@ -19,6 +19,7 @@ var app = new Vue({
     reportUrl: 'http://dr.w.baidu.com/report*',
     map: [],
     dom: {},
+    domReady: false,
     code: [],
     tabId: null,
     windowId: null,
@@ -62,6 +63,10 @@ var app = new Vue({
 
     generateInsertCode: function () {
       var i, j, k, len = this.map.length;
+      this.dom = {};
+      this.domReady = false;
+      this.code = [];
+      
       for(i = 0; i < len; i++){
         this.dom[this.map[i].event] = {
           selector: this.map[i].dom
@@ -153,6 +158,12 @@ var app = new Vue({
           if(request === 'content script ready' && _this.tabId){
             chrome.tabs.sendMessage(_this.tabId, _this.dom, function (response) {
               _this.dom = response; //get dom length, href, innerHTML and so on to help assertion
+              _this.domReady = true;
+              var ev = new Event('ready', {
+                'bubbles': true, 
+                'cancelable': false
+              });
+              document.dispatchEvent(ev);
             });
           }
         }
@@ -174,12 +185,21 @@ var app = new Vue({
             if(index + 1 < _this.code.length){
               promiseLoop(index + 1);
             }
-            else{
+            else {
               chrome.windows.remove(_this.windowId, function () {
                 _this.windowId = null;
                 _this.tabId = null;
               });
-              mocha.run(); //need dom length ready
+
+              if(_this.domReady){
+                mocha.run(); //dom info ready
+              }
+              else {
+                document.addEventListener('ready', function(ev){
+                  _this.domReady = true;
+                  mocha.run(); //dom info ready
+                })
+              }
             }
           });
         }
