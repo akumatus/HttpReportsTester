@@ -21,6 +21,7 @@ var app = new Vue({
     dom: {},
     code: [],
     tabId: null,
+    windowId: null,
     fileStatus: -99,
     decode: 1
   },
@@ -157,11 +158,13 @@ var app = new Vue({
         }
       );
 
-      chrome.tabs.create({
+      chrome.windows.create({
         url: this.url,
-        active: true
-      }, function (tab){
-        _this.tabId = tab.id;
+        width: 50,
+        height: 50
+      }, function (newWindow){
+        _this.windowId = newWindow.id;
+        _this.tabId = newWindow.tabs[0].id;
 
         function promiseLoop(index) {
           var promise = _this.executeScript(_this.code[index]);
@@ -172,7 +175,8 @@ var app = new Vue({
               promiseLoop(index + 1);
             }
             else{
-              chrome.tabs.remove(_this.tabId, function () {
+              chrome.windows.remove(_this.windowId, function () {
+                _this.windowId = null;
                 _this.tabId = null;
               });
               mocha.run(); //need dom length ready
@@ -210,10 +214,6 @@ var app = new Vue({
 
         clearTimeout(id);
         id = setTimeout(function () {
-          //var distNum = code.reports.length * _this.dom[code.name].length;
-          //var receivedNum = reports.length;
-          //console.log(code.name, receivedNum, distNum);
-          
           resolve(reports);
           chrome.webRequest.onBeforeRequest.removeListener(handle);
         }, 1000);
