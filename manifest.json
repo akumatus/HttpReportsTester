@@ -1,5 +1,5 @@
 {
-    "name": "Http Reports Tester",
+    "name": "HTTP Reports Tester",
     "description": "A testing framework used to help testing http reports of your website.",
     "version": "0.1",
     "background": {
