@@ -1,6 +1,6 @@
 {
-    "name": "Reports Testing",
-    "description": "A testing framework which can automatically testing http reports.",
+    "name": "HTTP Reports Tester",
+    "description": "A testing framework used to help testing http reports of your website.",
     "version": "0.1",
     "background": {
       "scripts": [ "src/js/background.js" ]
