@@ -22,7 +22,7 @@ var app = new Vue({
     code: [],
     tabId: null,
     fileStatus: -99,
-    decode: 0
+    decode: 1
   },
 
   created: function () {},
@@ -164,7 +164,7 @@ var app = new Vue({
         function promiseLoop(index) {
           var promise = _this.executeScript(_this.code[index]);
           promise.then(function(reports) {
-            //console.log(JSON.stringify(reports));
+            console.log(_this.code[index].name, reports);
             _this.mochaDescribe(reports, _this.code[index]);
             if(index + 1 < _this.code.length){
               promiseLoop(index + 1);
@@ -201,7 +201,7 @@ var app = new Vue({
         for(i = 0; i < len; i++){
           tempAry = reportRaw[i].split('=');
           if(tempAry[0] !== '_'){ //filter timestamp
-            report[tempAry[0]] = _this.decode ? decodeURI(tempAry[1]) : tempAry[1];
+            report[tempAry[0]] = _this.decode ? decodeURIComponent(tempAry[1]) : tempAry[1];
           }
         }
         reports.push(report);
@@ -263,7 +263,6 @@ var app = new Vue({
                         }
                       }
                     }
-                    console.log(codeArray.join('&&'));
                     return function (reports) {
                       return eval(codeArray.join('&&'));
                     };
@@ -278,14 +277,14 @@ var app = new Vue({
             else{
               if(code.order){ //same order as expected
                 for(i = 0; i < len; i ++){
-                  //console.log(code.name);
-                  //console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(code.reports[i]));
+                  console.log(code.name);
+                  console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(code.reports[i]));
                   expect(reports[i]).to.deep.equal(code.reports[i]);
                 }
               }
               else{ //do not need to have the same order
                 for(i = 0; i < len; i ++){
-                  findReport = function (reports) {
+                  findReport = (function(){
                     var key, codeArray = [];
                     for(key in code.reports[i]){
                       if(code.reports[i].hasOwnProperty(key)){
@@ -297,10 +296,12 @@ var app = new Vue({
                         }
                       }
                     }
-                    return eval(codeArray.join('&&'));
-                  };
-                  //console.log(code.name);
-                  //console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(reports.find(findReport));
+                    return function (reports) {
+                      return eval(codeArray.join('&&'));
+                    }
+                  })();
+                  console.log(code.name);
+                  console.log(JSON.stringify(reports[i]), '\n', JSON.stringify(reports.find(findReport)));
                   expect(reports.find(findReport)).to.not.equal(undefined);
                 }
               }
