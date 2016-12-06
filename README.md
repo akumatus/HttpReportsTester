@@ -1,27 +1,27 @@
-# Http Report Tester
+# HTTP Reports Tester
 
-Http Report Tester is a chrome extension used to testing http reports of your website. 
+HTTP Reports Tester is a chrome extension used to test http reports of your website. 
 
-![Http Report Tester](https://github.com/akumatus/HttpReportsTester/blob/master/tester-icon.png)
+![Http Reports Tester](https://github.com/akumatus/HttpReportsTester/blob/master/tester-icon.png)
 
-As an automatical testing framwork, it can:
+As an automatical testing framework, it can:
 
 * Upload expectant reports configration file
 * Automatically trigger scroll, click or hover events, collecting all of these http reports
 * Compare collected reports and expectant reports
 
-The user interface looks as below:
+The user interface as shown below:
 
 ![Http Report Tester](https://github.com/akumatus/HttpReportsTester/blob/master/tester-ui.png)
 
-There is a `map-example.js` file in this repository, supports regex and dom property.
+There is a `map-example.js` file in this repository which is used as reports configration file.
 
 ```javascript
 var map = [{
-  event: 'init',
-  dom: 'body',
-  order: false,
-  reports: [
+  event: 'init',  // Website init reports
+  dom: 'body',    // Dom selector 
+  order: true,    // Reports need in proper order
+  reports: [      // Expectant reports array
     {
       "1": "1",
       "v": "2.0.2",
@@ -31,7 +31,7 @@ var map = [{
       "tn": ""
     },
     {
-      "29": /.+/,  //You can use regex
+      "29": /.+/,       //You can use regex here
       "30": "1",
       "1001": "2",
       "v": "2.0.2",
@@ -42,11 +42,11 @@ var map = [{
     }
   ]
 },{
-  event: 'click',
-  order: false,
+  event: 'click',       // Click event reports
+  order: false,         // Reports out of order
   dom: '.websitesUl-li-link',
   reports: [{
-    "62": "{{href}}", //Dom property in this way
+    "62": "{{href}}",   // Config dom property in this way
     "63": "{{innerText}}",
     "64": "1",
     "1001": "2",
