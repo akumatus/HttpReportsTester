@@ -1,6 +1,8 @@
 /**
  * Created by wuyue07 on 16/11/28.
  */
+var url = 'https://0.baidu.com/';
+var reportUrl = 'http://dr.w.baidu.com/report*';
 var map = [{
   event: 'init',
   dom: 'body',
