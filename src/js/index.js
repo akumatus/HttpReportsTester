@@ -15,9 +15,13 @@ var app = new Vue({
 
   data: {
     showResult: false,
-    url: 'https://0.baidu.com/',
-    reportUrl: 'http://dr.w.baidu.com/report*',
+    url: '',
+    reportUrl: '',
     map: [],
+    windowSize: {
+      width: 50,
+      height: 50
+    },
     dom: {},
     domReady: false,
     code: [],
@@ -51,6 +55,12 @@ var app = new Vue({
           var code = e.target.result;
           eval(code);
           _this.map = map;
+          if(typeof url === 'string') {
+            _this.url = url;
+          }
+          if(typeof reportUrl === 'string') {
+            _this.reportUrl = reportUrl;
+          }
           _this.generateInsertCode();
         };
         reader.readAsText(file);
@@ -101,8 +111,24 @@ var app = new Vue({
               order: this.map[i].order,
               code: `
               var scrollDoms = document.querySelectorAll('${this.map[i].dom}');
-              for (var i = 0; i < scrollDoms.length; i++){
-                scrollDoms[i].scrollTop = scrollDoms[i].offsetHeight;
+              var totalHeight, i;
+              function scrollLoop (index, scrollDom, totalHeight) {
+                var promise = new Promise((resolve, reject) => {
+                  scrollDom.scrollTop = (index / 10) * totalHeight;
+                  setTimeout(function () {
+                    resolve();
+                  }, 200)
+                });
+                promise.then(function() {
+                  if(index + 1 <= 10){
+                    scrollLoop(index + 1, scrollDom, totalHeight);
+                  }
+                  else {}
+                });
+              }
+              for (i = 0; i < scrollDoms.length; i++){
+                totalHeight = scrollDoms[i].offsetHeight;
+                scrollLoop(0, scrollDoms[i], totalHeight);
               }`
             });
             break;
@@ -171,8 +197,8 @@ var app = new Vue({
 
       chrome.windows.create({
         url: this.url,
-        width: 50,
-        height: 50
+        width: this.windowSize.width,
+        height: this.windowSize.height
       }, function (newWindow){
         _this.windowId = newWindow.id;
         _this.tabId = newWindow.tabs[0].id;
